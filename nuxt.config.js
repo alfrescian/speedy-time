@@ -1,4 +1,7 @@
-const pkg = require('./package')
+const pkg = require('./package');
+const Strapi = require('strapi-sdk-javascript').default;
+const apiUrl = process.env.API_URL || 'http://localhost:1337';
+const strapi = new Strapi(apiUrl);
 
 module.exports = {
   mode: 'universal',
@@ -22,6 +25,28 @@ module.exports = {
   ** Customize the progress-bar color
   */
   loading: {color: '#FFFFFF'},
+
+  /*
+  ** pre-generate dynamic routes for existing events
+  */
+  generate: {
+    routes: function () {
+      return strapi.request('post', '/graphql', {
+        data: {
+          query: `query {
+            events {
+              _id
+            }
+          }
+          `
+        }
+      }).then((response) => {
+        return response.data.events.map((event) => {
+          return '/events/' + event._id
+        })
+      });
+    }
+  },
 
   /*
   ** Global CSS
@@ -66,4 +91,4 @@ module.exports = {
       }
     }
   }
-}
+};
